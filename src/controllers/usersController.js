@@ -68,4 +68,49 @@ async function signIn(req, res) {
     }
 }
 
-export { signUp, signIn };
+async function getMyUser(req, res) {
+    const session = res.locals.session;
+
+    try {
+        const userMe = (
+            await connection.query(
+                `
+            SELECT 
+             users.id,
+             users.name,
+             SUM(urls."visitCount") AS "visitCount"
+               FROM users
+               JOIN urls ON urls."userId" = users.id
+               WHERE users.id = $1
+               GROUP BY users.id
+        `,
+                [session.userId]
+            )
+        ).rows[0];
+
+        const userMeUrls = (
+            await connection.query(
+                `
+            SELECT
+                urls.id,
+                urls."shortUrl",
+                urls.url,
+                urls."visitCount"                      
+              FROM urls
+               WHERE urls."userId" = $1
+                `,
+                [session.userId]
+            )
+        ).rows;
+
+        res.status(STATUS_CODE.OK).send({
+            ...userMe,
+            shortenedUrls: [...userMeUrls],
+        });
+    } catch (error) {
+        console.error(error.message);
+        res.sendStatus(STATUS_CODE.SERVER_ERROR);
+    }
+}
+
+export { signUp, signIn, getMyUser };
