@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import userRouter from "./routes/users.router.js";
+import urlsRouter from "./routes/urls.router.js";
 
 dotenv.config();
 
@@ -10,6 +11,7 @@ server.use(cors());
 server.use(express.json());
 
 server.use(userRouter);
+server.use(urlsRouter);
 
 server.get("/status", (req, res) => {
     res.send("Ok status");

@@ -17,6 +17,16 @@ async function verifyAuth(req, res, next) {
             return res.sendStatus(STATUS_CODE.BAD_REQUEST);
         } */
 
+        const session = await connection.query(
+            `
+            SELECT * FROM sessions WHERE token = $1
+        `,
+            [token]
+        );
+        if (session.rowCount === 0) {
+            return res.sendStatus(STATUS_CODE.UNAUTHORIZED);
+        }
+
         res.locals.session = session;
         next();
     } catch (error) {
