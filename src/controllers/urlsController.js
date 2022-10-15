@@ -35,4 +35,26 @@ async function insertUrlsShorten(req, res) {
     res.status(STATUS_CODE.CREATED).send({ shortUrl });
 }
 
-export { insertUrlsShorten };
+async function getUrlById(req, res) {
+    const { id } = req.params;
+
+    try {
+        const url = await connection.query(
+            `
+        SELECT id, "shortUrl", "url" FROM urls WHERE id = $1
+        `,
+            [id]
+        );
+
+        if (url.rowCount === 0) {
+            return res.sendStatus(STATUS_CODE.NOT_FOUND);
+        }
+
+        res.status(STATUS_CODE.OK).send(url.rows[0]);
+    } catch (error) {
+        console.error(error.message);
+        res.sendStatus(STATUS_CODE.SERVER_ERROR);
+    }
+}
+
+export { insertUrlsShorten, getUrlById };
