@@ -8,6 +8,9 @@ async function insertUrlsShorten(req, res) {
     const { url } = req.body;
     const isUrl = /^https:\/\//i.test(url);
     const shortUrl = nanoid();
+    const session = res.locals.session;
+
+    console.log(session);
 
     if (!isUrl) {
         console.log("Invalid URL!");
@@ -16,7 +19,20 @@ async function insertUrlsShorten(req, res) {
 
     console.log(shortUrl);
 
-    res.status(STATUS_CODE.CREATED).send("ok");
+    try {
+        await connection.query(
+            `
+        INSERT INTO urls ("userId", "shortUrl", "url") 
+        VALUES ($1, $2, $3)
+        `,
+            [session.userId, shortUrl, url]
+        );
+    } catch (error) {
+        console.error(error.message);
+        res.sendStatus(STATUS_CODE.SERVER_ERROR);
+    }
+
+    res.status(STATUS_CODE.CREATED).send({ shortUrl });
 }
 
 export { insertUrlsShorten };
