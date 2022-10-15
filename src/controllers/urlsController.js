@@ -10,14 +10,10 @@ async function insertUrlsShorten(req, res) {
     const shortUrl = nanoid();
     const session = res.locals.session;
 
-    console.log(session);
-
     if (!isUrl) {
-        console.log("Invalid URL!");
+        console.error("Invalid URL!");
         return res.sendStatus(STATUS_CODE.UNPROCESSABLE_ENTITY);
     }
-
-    console.log(shortUrl);
 
     try {
         await connection.query(
@@ -57,4 +53,38 @@ async function getUrlById(req, res) {
     }
 }
 
-export { insertUrlsShorten, getUrlById };
+async function deleteUrlById(req, res) {
+    const { id } = req.params;
+    const session = res.locals.session;
+
+    try {
+        const url = await connection.query(
+            `
+        SELECT * FROM urls WHERE id = $1
+        `,
+            [id]
+        );
+
+        if (url.rowCount === 0) {
+            return res.sendStatus(STATUS_CODE.NOT_FOUND);
+        }
+
+        if (session.userId !== url.rows[0].userId) {
+            return res.sendStatus(STATUS_CODE.UNAUTHORIZED);
+        }
+
+        await connection.query(
+            `
+        DELETE FROM urls WHERE id = $1
+        `,
+            [id]
+        );
+
+        res.sendStatus(STATUS_CODE.NO_CONTENT);
+    } catch (error) {
+        console.error(error.message);
+        res.sendStatus(STATUS_CODE.SERVER_ERROR);
+    }
+}
+
+export { insertUrlsShorten, getUrlById, deleteUrlById };

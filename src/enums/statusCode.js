@@ -6,6 +6,7 @@ const STATUS_CODE = Object.freeze({
     UNPROCESSABLE_ENTITY: 422,
     UNAUTHORIZED: 401,
     SERVER_ERROR: 500,
+    NO_CONTENT: 204,
     CONFLICT: 409,
 });
 
