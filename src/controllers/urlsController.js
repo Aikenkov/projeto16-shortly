@@ -87,4 +87,25 @@ async function deleteUrlById(req, res) {
     }
 }
 
-export { insertUrlsShorten, getUrlById, deleteUrlById };
+async function openShortUrl(req, res) {
+    const { shortUrl } = req.params;
+    try {
+        const url = await connection.query(
+            `
+        SELECT * FROM urls WHERE "shortUrl" = $1
+        `,
+            [shortUrl]
+        );
+
+        if (url.rowCount === 0) {
+            return res.sendStatus(STATUS_CODE.NOT_FOUND);
+        }
+
+        res.redirect(url.rows[0].url);
+    } catch (error) {
+        console.error(error.message);
+        res.sendStatus(STATUS_CODE.SERVER_ERROR);
+    }
+}
+
+export { insertUrlsShorten, getUrlById, deleteUrlById, openShortUrl };

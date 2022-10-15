@@ -72,7 +72,7 @@ async function getMyUser(req, res) {
     const session = res.locals.session;
 
     try {
-        const userMe = (
+        let userMe = (
             await connection.query(
                 `
             SELECT 
@@ -87,6 +87,15 @@ async function getMyUser(req, res) {
                 [session.userId]
             )
         ).rows[0];
+
+        if (userMe === undefined) {
+            userMe = (
+                await connection.query(
+                    `SELECT users.id, users.name FROM users WHERE users.id = $1`,
+                    [session.userId]
+                )
+            ).rows[0];
+        }
 
         const userMeUrls = (
             await connection.query(
