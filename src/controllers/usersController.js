@@ -88,15 +88,6 @@ async function getMyUser(req, res) {
             )
         ).rows[0];
 
-        if (userMe === undefined) {
-            userMe = (
-                await connection.query(
-                    `SELECT users.id, users.name FROM users WHERE users.id = $1`,
-                    [session.userId]
-                )
-            ).rows[0];
-        }
-
         const userMeUrls = (
             await connection.query(
                 `
@@ -111,6 +102,21 @@ async function getMyUser(req, res) {
                 [session.userId]
             )
         ).rows;
+
+        if (userMe === undefined) {
+            userMe = (
+                await connection.query(
+                    `SELECT users.id, users.name FROM users WHERE users.id = $1`,
+                    [session.userId]
+                )
+            ).rows[0];
+
+            return res.status(STATUS_CODE.OK).send({
+                ...userMe,
+                visitCount: "0",
+                shortenedUrls: [...userMeUrls],
+            });
+        }
 
         res.status(STATUS_CODE.OK).send({
             ...userMe,
