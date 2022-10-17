@@ -101,6 +101,13 @@ async function openShortUrl(req, res) {
             return res.sendStatus(STATUS_CODE.NOT_FOUND);
         }
 
+        await connection.query(
+            `
+         UPDATE urls SET "visitCount" = "visitCount" + 1 WHERE "shortUrl" = $1 
+        `,
+            [shortUrl]
+        );
+
         res.redirect(url.rows[0].url);
     } catch (error) {
         console.error(error.message);
@@ -108,4 +115,31 @@ async function openShortUrl(req, res) {
     }
 }
 
-export { insertUrlsShorten, getUrlById, deleteUrlById, openShortUrl };
+async function getRanking(req, res) {
+    try {
+        const ranking = await connection.query(`
+        SELECT
+            users.id,
+            users.name,
+            COUNT(urls.id) AS "linksCount",
+            SUM(COALESCE(urls."visitCount", 0)) AS "visitCount"
+        FROM users LEFT JOIN urls
+        ON urls."userId" = users.id
+        GROUP BY users.id    
+        ORDER BY "visitCount" DESC
+        LIMIT 10
+        `);
+        res.send(ranking.rows);
+    } catch (error) {
+        console.error(error.message);
+        res.sendStatus(STATUS_CODE.SERVER_ERROR);
+    }
+}
+
+export {
+    insertUrlsShorten,
+    getUrlById,
+    deleteUrlById,
+    openShortUrl,
+    getRanking,
+};
